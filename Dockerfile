@@ -6,7 +6,7 @@ FROM ghcr.io/linuxserver/baseimage-selkies:ubuntunoble
 ARG BUILD_DATE
 ARG VERSION
 LABEL build_version="Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}"
-LABEL maintainer="thelamer"
+LABEL maintainer="jamesjnadeau"
 
 # title
 ENV TITLE=PrusaSlicer \
@@ -44,27 +44,10 @@ RUN \
     xdg-utils locales locales-all pcmanfm jq curl git bzip2 gpg-agent \
     unzip build-essential autoconf cmake texinfo \
     libgtk-3-dev libdbus-1-dev libwebkit2gtk-4.1-dev \
-    # added to support/transition to debian
     libboost-system-dev libboost-thread-dev libboost-program-options-dev libboost-test-dev \
     libgl1 libglx-mesa0 \
     gnupg automake texinfo libtool wget\
-    
-  # echo "**** install orcaslicer from appimage ****" && \
-  # if [ -z ${ORCASLICER_VERSION+x} ]; then \
-  #   ORCASLICER_VERSION=$(curl -sX GET "https://api.github.com/repos/OrcaSlicer/OrcaSlicer/releases/latest" \
-  #   | awk '/tag_name/{print $4;exit}' FS='[""]'); \
-  # fi && \
-  # RELEASE_URL=$(curl -sX GET "https://api.github.com/repos/OrcaSlicer/OrcaSlicer/releases/latest"     | awk '/url/{print $4;exit}' FS='[""]') && \
-  # DOWNLOAD_URL=$(curl -sX GET "${RELEASE_URL}" | awk '/browser_download_url.*Ubuntu2404/{print $4;exit}' FS='[""]') && \
-  # cd /tmp && \
-  # curl -o \
-  #   /tmp/orca.app -L \
-  #   "${DOWNLOAD_URL}" && \
-  # chmod +x /tmp/orca.app && \
-  # ./orca.app --appimage-extract && \
-  # mv squashfs-root /opt/orcaslicer && \
-  && localedef -i en_GB -f UTF-8 en_GB.UTF-8 && \
-  printf "Linuxserver.io version: ${VERSION}\nBuild-date: ${BUILD_DATE}" > /build_version && \
+  && printf "Linuxserver.io version: ${VERSION}\nBuild-date: ${BUILD_DATE}" > /build_version && \
   echo "**** cleanup ****" && \
   apt-get autoclean && \
   rm -rf \
@@ -90,10 +73,16 @@ RUN latestSlic3r=$(curl -SsL https://api.github.com/repos/prusa3d/PrusaSlicer/re
   && cd /opt/PrusaSlicer \
   && rm -rf src/deps/build src/build/tests
 
+# make prints directory available easily
+RUN echo "file:///prints prints" >> /config/.gtk-bookmarks
+
 
 # add local files
 COPY /root /
 
 # ports and volumes
 EXPOSE 3001
-VOLUME /config
+# users home directory
+VOLUME /config 
+# storage for 3 models
+VOLUME /prints
