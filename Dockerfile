@@ -1,6 +1,7 @@
 # syntax=docker/dockerfile:1
 
-FROM ghcr.io/linuxserver/baseimage-selkies:ubuntunoble
+# FROM ghcr.io/linuxserver/baseimage-selkies:ubuntunoble
+FROM ghcr.io/linuxserver/baseimage-selkies:alpine322
 
 # set version label
 ARG BUILD_DATE
@@ -15,41 +16,21 @@ ENV TITLE=PrusaSlicer \
 
 # install packages
 RUN \
-  echo "**** add icon ****" && \
-  curl -o \
-    /usr/share/selkies/www/icon.png \
-    https://raw.githubusercontent.com/linuxserver/docker-templates/master/linuxserver.io/img/orcaslicer-logo.png && \
   echo "**** install packages ****" && \
-  add-apt-repository ppa:xtradeb/apps && \
-  apt-get update && \
-  DEBIAN_FRONTEND=noninteractive \
-  apt-get install --no-install-recommends -y -q \
-    firefox \
-    gstreamer1.0-alsa \
-    gstreamer1.0-gl \
-    gstreamer1.0-gtk3 \
-    gstreamer1.0-libav \
-    gstreamer1.0-plugins-bad \
-    gstreamer1.0-plugins-base \
-    gstreamer1.0-plugins-good \
-    gstreamer1.0-plugins-ugly \
-    gstreamer1.0-pulseaudio \
-    gstreamer1.0-qt5 \
-    gstreamer1.0-tools \
-    gstreamer1.0-x \
-    libgstreamer-plugins-bad1.0 \
-    libwebkit2gtk-4.1-0 \
-    libwx-perl \ 
     # Packages needed to build PrusaSlicer from source.
-    xdg-utils locales locales-all pcmanfm jq curl git bzip2 gpg-agent \
-    unzip build-essential autoconf cmake texinfo \
-    libgtk-3-dev libdbus-1-dev libwebkit2gtk-4.1-dev \
-    libboost-system-dev libboost-thread-dev libboost-program-options-dev libboost-test-dev \
-    libgl1 libglx-mesa0 \
+  apk add --no-cache \
+    # locales locales-all
+    xdg-utils pcmanfm jq curl git bzip2 gpg-agent \
+    unzip build-base autoconf cmake texinfo \
+    # libgtk-3-dev libdbus-1-dev libwebkit2gtk-4.1-dev \
+    gtk+3.0-dev \
+    #libboost-system-dev libboost-thread-dev libboost-program-options-dev libboost-test-dev \
+    boost-dev dbus-dev \
+    # libgl1 libglx-mesa0 \
+    mesa-dev \
     gnupg automake texinfo libtool wget\
   && printf "Linuxserver.io version: ${VERSION}\nBuild-date: ${BUILD_DATE}" > /build_version && \
   echo "**** cleanup ****" && \
-  apt-get autoclean && \
   rm -rf \
     /config/.cache \
     /config/.launchpadlib \
