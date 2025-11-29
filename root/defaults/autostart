@@ -1,0 +1,17 @@
+#!/bin/bash
+
+# Define the command you want to run
+PROGRAM_CMD="/opt/PrusaSlicer/src/build/src/prusa-slicer"
+
+echo "Starting monitoring loop for $PROGRAM_CMD"
+
+# Run the program in a continuous loop
+while true; do
+    echo "Attempting to start program at $(date)" >> "$LOG_FILE"
+    # Execute the program. The loop will restart if this command exits.
+    $PROGRAM_CMD
+    # $? holds the exit status of the last command.
+    EXIT_STATUS=$?
+    echo "Program stopped with exit status $EXIT_STATUS at $(date). Restarting in 5 seconds..." >> "$LOG_FILE"
+    sleep 5
+done
