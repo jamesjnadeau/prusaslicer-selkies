@@ -13,6 +13,7 @@ ENV TITLE=PrusaSlicer \
     SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt \
     NO_GAMEPAD=true
 
+# install packages
 RUN \
   echo "**** add icon ****" && \
   curl -o \
@@ -73,21 +74,21 @@ RUN \
     /var/tmp/* \
     /tmp/*
 
+# build prusa-slicer from source
 WORKDIR /opt/PrusaSlicer
-RUN latestSlic3r=$(curl -SsL https://api.github.com/repos/prusa3d/PrusaSlicer/releases/latest | jq -r '.zipball_url') && wget ${latestSlic3r} -O /tmp/PrusaSlicer.zip 
-RUN unzip /tmp/PrusaSlicer.zip -d /tmp/extracted 
-RUN mv /tmp/extracted/* ./src 
-RUN rm /tmp/PrusaSlicer.zip && rmdir /tmp/extracted 
-WORKDIR /opt/PrusaSlicer/src/deps 
-RUN mkdir build && cd build \
-  && cmake .. -DDEP_WX_GTK3=ON && make 
-WORKDIR /opt/PrusaSlicer/src
-RUN mkdir build && cd build \
+RUN latestSlic3r=$(curl -SsL https://api.github.com/repos/prusa3d/PrusaSlicer/releases/latest | jq -r '.zipball_url') && wget ${latestSlic3r} -O /tmp/PrusaSlicer.zip \
+  && unzip /tmp/PrusaSlicer.zip -d /tmp/extracted \
+  && mv /tmp/extracted/* ./src \
+  && rm /tmp/PrusaSlicer.zip && rmdir /tmp/extracted \
+  && cd /opt/PrusaSlicer/src/deps \
+  && mkdir build && cd build \
+  && cmake .. -DDEP_WX_GTK3=ON && make \
+  && cd /opt/PrusaSlicer/src \
+  && mkdir build && cd build \
   && cmake .. -DSLIC3R_STATIC=1 -DSLIC3R_GTK=3 -DSLIC3R_PCH=OFF -DCMAKE_PREFIX_PATH=$(pwd)/../deps/build/destdir/usr/local \
-  && make -j4 
-WORKDIR /opt/PrusaSlicer
-RUN  rm -rf src/deps/build src/build/tests
-
+  && make -j4 \
+  && cd /opt/PrusaSlicer \
+  && rm -rf src/deps/build src/build/tests
 
 
 # add local files
