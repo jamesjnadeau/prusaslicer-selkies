@@ -1,6 +1,33 @@
 # syntax=docker/dockerfile:1
 
-FROM ghcr.io/linuxserver/baseimage-selkies:ubuntunoble
+FROM ghcr.io/linuxserver/baseimage-selkies:ubuntunoble AS builder
+RUN apt-get install --no-install-recommends -y -q \
+    # Packages needed to build PrusaSlicer from source.
+    xdg-utils locales locales-all pcmanfm jq curl git bzip2 gpg-agent \
+    unzip build-essential autoconf cmake texinfo \
+    libgtk-3-dev libdbus-1-dev libwebkit2gtk-4.1-dev \
+    libboost-system-dev libboost-thread-dev libboost-program-options-dev libboost-test-dev \
+    libgl1 libglx-mesa0 \
+    gnupg automake texinfo libtool wget libgmp-dev 
+
+# build prusa-slicer from source
+WORKDIR /opt/PrusaSlicer
+RUN latestSlic3r=$(curl -SsL https://api.github.com/repos/prusa3d/PrusaSlicer/releases/latest | jq -r '.zipball_url') && wget ${latestSlic3r} -O /tmp/PrusaSlicer.zip \
+  && unzip /tmp/PrusaSlicer.zip -d /tmp/extracted \
+  && mv /tmp/extracted/* ./src \
+  && rm /tmp/PrusaSlicer.zip && rmdir /tmp/extracted \
+  && cd /opt/PrusaSlicer/src/deps \
+  && mkdir build && cd build \
+  && cmake .. -DDEP_WX_GTK3=ON && make \
+  && cd /opt/PrusaSlicer/src \
+  && mkdir build && cd build \
+  && cmake .. -DSLIC3R_STATIC=1 -DSLIC3R_GTK=3 -DSLIC3R_PCH=OFF -DCMAKE_PREFIX_PATH=$(pwd)/../deps/build/destdir/usr/local \
+  && make -j4 \
+  && cd /opt/PrusaSlicer \
+  && rm -rf src/deps/build src/build/tests
+
+
+FROM ghcr.io/linuxserver/baseimage-selkies:ubuntunoble AS runtime
 
 # set version label
 ARG BUILD_DATE
@@ -40,13 +67,6 @@ RUN \
     libgstreamer-plugins-bad1.0 \
     libwebkit2gtk-4.1-0 \
     libwx-perl \ 
-    # Packages needed to build PrusaSlicer from source.
-    xdg-utils locales locales-all pcmanfm jq curl git bzip2 gpg-agent \
-    unzip build-essential autoconf cmake texinfo \
-    libgtk-3-dev libdbus-1-dev libwebkit2gtk-4.1-dev \
-    libboost-system-dev libboost-thread-dev libboost-program-options-dev libboost-test-dev \
-    libgl1 libglx-mesa0 \
-    gnupg automake texinfo libtool wget\
   && printf "Linuxserver.io version: ${VERSION}\nBuild-date: ${BUILD_DATE}" > /build_version && \
   echo "**** cleanup ****" && \
   apt-get autoclean && \
@@ -57,25 +77,11 @@ RUN \
     /var/tmp/* \
     /tmp/*
 
-# build prusa-slicer from source
-WORKDIR /opt/PrusaSlicer
-RUN latestSlic3r=$(curl -SsL https://api.github.com/repos/prusa3d/PrusaSlicer/releases/latest | jq -r '.zipball_url') && wget ${latestSlic3r} -O /tmp/PrusaSlicer.zip \
-  && unzip /tmp/PrusaSlicer.zip -d /tmp/extracted \
-  && mv /tmp/extracted/* ./src \
-  && rm /tmp/PrusaSlicer.zip && rmdir /tmp/extracted \
-  && cd /opt/PrusaSlicer/src/deps \
-  && mkdir build && cd build \
-  && cmake .. -DDEP_WX_GTK3=ON && make \
-  && cd /opt/PrusaSlicer/src \
-  && mkdir build && cd build \
-  && cmake .. -DSLIC3R_STATIC=1 -DSLIC3R_GTK=3 -DSLIC3R_PCH=OFF -DCMAKE_PREFIX_PATH=$(pwd)/../deps/build/destdir/usr/local \
-  && make -j4 \
-  && cd /opt/PrusaSlicer \
-  && rm -rf src/deps/build src/build/tests
-
 # make prints directory available easily
 RUN echo "file:///prints prints" >> /config/.gtk-bookmarks
 
+# copy in build prusa slicer
+COPY --from=builder /opt /opt
 
 # add local files
 COPY /root /
