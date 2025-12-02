@@ -1,14 +1,16 @@
 # syntax=docker/dockerfile:1
 
 FROM ghcr.io/linuxserver/baseimage-selkies:ubuntunoble AS builder
-RUN apt-get install --no-install-recommends -y -q \
-    # Packages needed to build PrusaSlicer from source.
-    xdg-utils locales locales-all pcmanfm jq curl git bzip2 gpg-agent \
-    unzip build-essential autoconf cmake texinfo \
-    libgtk-3-dev libdbus-1-dev libwebkit2gtk-4.1-dev \
-    libboost-system-dev libboost-thread-dev libboost-program-options-dev libboost-test-dev \
-    libgl1 libglx-mesa0 \
-    gnupg automake texinfo libtool wget libgmp-dev 
+RUN apt-get update \
+    && DEBIAN_FRONTEND=noninteractive \
+    && apt-get install --no-install-recommends -y -q \
+        # Packages needed to build PrusaSlicer from source.
+        xdg-utils locales locales-all pcmanfm jq curl git bzip2 gpg-agent \
+        unzip build-essential autoconf cmake texinfo \
+        libgtk-3-dev libdbus-1-dev libwebkit2gtk-4.1-dev \
+        libboost-system-dev libboost-thread-dev libboost-program-options-dev libboost-test-dev \
+        libgl1 libglx-mesa0 \
+        gnupg automake texinfo libtool wget libgmp-dev 
 
 # build prusa-slicer from source
 WORKDIR /opt/PrusaSlicer
