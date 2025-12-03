@@ -85,7 +85,7 @@ RUN \
 RUN echo "file:///prints prints" >> /config/.gtk-bookmarks
 
 # copy in build prusa slicer
-COPY --from=builder /opt /opt
+COPY --from=builder /opt/PrusaSlicer /opt/PrusaSlicer
 
 # add local files
 COPY /root /
