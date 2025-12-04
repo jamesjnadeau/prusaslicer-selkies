@@ -20,7 +20,7 @@ RUN latestSlic3r=$(curl -SsL https://api.github.com/repos/prusa3d/PrusaSlicer/re
   && rm /tmp/PrusaSlicer.zip && rmdir /tmp/extracted \
   && cd /opt/PrusaSlicer/src/deps \
   && mkdir build && cd build \
-  && sed -i 's|https://gmplib.org/download|https://ftp.gnu.org/gnu|g' /opt/PrusaSlicer/src/deps/+GMP/GMP.cmake \
+  # && sed -i 's|https://gmplib.org/download|https://ftp.gnu.org/gnu|g' /opt/PrusaSlicer/src/deps/+GMP/GMP.cmake \
   && cmake .. -DDEP_WX_GTK3=ON && make 
   # && cd /opt/PrusaSlicer/src \
 WORKDIR /opt/PrusaSlicer/src
